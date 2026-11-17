@@ -1,0 +1,1474 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laporan Harian Divisi Mine Plan - SPT Group</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Identity Services (OAuth2 untuk Upload Langsung ke Google Drive) -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Arial', 'sans-serif'],
+                    },
+                    colors: {
+                        sku: {
+                            navy: '#0f2942',
+                            gold: '#d97706',
+                            slate: '#334155',
+                            light: '#f8fafc'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        /* Styling Dasar Layar */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #e2e8f0;
+            color: #1e293b;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Standarisasi Proporsi & Kerapian Seluruh Tombol */
+        button, label[for="logoUploadInput"] {
+            box-sizing: border-box;
+            white-space: nowrap;
+            user-select: none;
+        }
+        button:active, label[for="logoUploadInput"]:active {
+            transform: translateY(0.5px);
+        }
+
+        /* Simulasi Kertas A4 di Layar */
+        .a4-sheet {
+            width: 210mm;
+            min-height: 297mm;
+            background: #ffffff;
+            margin: 1.5rem auto 3rem auto;
+            padding: 15mm 18mm;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            position: relative;
+        }
+
+        /* Responsif untuk layar HP / Tablet agar tidak horizontal scroll */
+        @media screen and (max-width: 850px) {
+            .a4-sheet {
+                width: 96%;
+                min-height: auto;
+                padding: 16px;
+                margin: 12px auto 24px auto;
+            }
+        }
+
+        /* Auto-resize Textarea tanpa scrollbar */
+        textarea.auto-expand {
+            resize: none;
+            overflow: hidden;
+            min-height: 36px;
+            line-height: 1.45;
+        }
+
+        /* Garis Kop Surat Ganda */
+        .double-border-bottom {
+            border-bottom: 3px double #0f2942;
+        }
+
+        /* Styling Dropdown Perusahaan di Kop Surat */
+        .company-select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230f2942'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2.5' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 0.9rem;
+            padding-right: 1.65rem;
+            padding-left: 1.25rem;
+            text-align-last: center;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 0.4px;
+        }
+
+        /* Styling Tabel Dokumen Formal */
+        .doc-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .doc-table th, .doc-table td {
+            border: 1px solid #334155;
+        }
+        .doc-table th {
+            background-color: #f1f5f9;
+            color: #0f2942;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        /* Custom Modal Animasi */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-animate {
+            animation: fadeIn 0.18s ease-out forwards;
+        }
+
+        /* =========================================================
+           PENGATURAN CETAK / SAVE PDF (@media print)
+           ========================================================= */
+        @media print {
+            @page {
+                size: A4 portrait;
+                margin: 12mm 14mm;
+            }
+
+            body {
+                background: #ffffff !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                font-size: 10.5pt !important;
+                color: #000000 !important;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .a4-sheet {
+                width: 100% !important;
+                max-width: 100% !important;
+                min-height: auto !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
+
+            /* Bersihkan tampilan input & select saat dicetak */
+            input[type="text"],
+            input[type="date"],
+            select,
+            textarea {
+                border: none !important;
+                background: transparent !important;
+                background-image: none !important;
+                box-shadow: none !important;
+                padding: 1px 2px !important;
+                color: #000000 !important;
+                appearance: none !important;
+                -webkit-appearance: none !important;
+                -moz-appearance: none !important;
+            }
+
+            .company-select {
+                padding-left: 0 !important;
+                padding-right: 0 !important;
+                color: #0f2942 !important;
+                font-size: 11.5pt !important;
+                font-weight: 700 !important;
+                letter-spacing: 0.4px !important;
+            }
+
+            /* Sembunyikan input date native & tampilkan teks tanggal Indonesia rapi */
+            .screen-date-input {
+                display: none !important;
+            }
+            .print-date-text {
+                display: inline-block !important;
+            }
+
+            /* Placeholder tidak ikut tercetak jika kosong */
+            input::placeholder,
+            textarea::placeholder {
+                color: transparent !important;
+            }
+
+            .doc-table th {
+                background-color: #e2e8f0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                color: #000000 !important;
+            }
+
+            .doc-table th, .doc-table td {
+                border: 1px solid #000000 !important;
+            }
+
+            /* Cegah elemen penting terpotong di tengah halaman */
+            tr, .doc-photo-card, .signature-section, .notes-section {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+
+            .photo-dropzone {
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+            }
+
+            .empty-photo-slot {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body class="pb-12">
+
+    <!-- =========================================================
+         TOOLBAR AKSI ATAS (TIDAK IKUT TERCETAK)
+         ========================================================= -->
+    <div class="no-print sticky top-0 z-40 bg-slate-900/95 backdrop-blur text-white border-b border-slate-700 shadow-md">
+        <div class="max-w-[210mm] mx-auto px-3 sm:px-4 py-2.5 flex flex-wrap items-center justify-between gap-2.5">
+            <!-- Indikator Status Auto-Save di Sisi Kiri -->
+            <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-400/40 flex items-center justify-center text-amber-400 font-bold text-xs flex-shrink-0">
+                    MP
+                </div>
+                <div class="truncate">
+                    <h1 class="text-xs sm:text-sm font-bold tracking-wide text-white leading-tight truncate">E-Laporan Harian Mine Plan</h1>
+                    <p class="text-[11px] text-slate-400 flex items-center gap-1.5 leading-tight mt-0.5">
+                        <span id="saveStatusDot" class="w-2 h-2 rounded-full bg-emerald-400 inline-block flex-shrink-0"></span>
+                        <span id="saveStatusText" class="truncate">Tersimpan Otomatis</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Bar Tombol Aksi Utama di Sisi Kanan (Rapi, Sejajar & Tanpa Duplikasi) -->
+            <div class="flex flex-wrap items-center gap-2 ml-auto">
+                <button type="button" onclick="openGDriveModal()" class="h-8 px-3 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white border border-emerald-500 rounded-lg shadow-xs transition inline-flex items-center justify-center gap-1.5 cursor-pointer" title="Simpan arsip laporan ke folder Google Drive">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm1.35 0l6.56 11.5h6.86L15.92 3.5H9.06zm5.79 13L8.3 16.5l-3.43 6h13.71l3.43-6h-7.16z"/></svg>
+                    <span>Simpan Drive</span>
+                </button>
+
+                <button type="button" onclick="openResetModal()" class="h-8 px-3 text-xs font-semibold bg-rose-950/50 hover:bg-rose-900/70 text-rose-200 border border-rose-500/50 hover:border-rose-400 rounded-lg transition inline-flex items-center justify-center gap-1.5 cursor-pointer" title="Kosongkan semua isian">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    <span>Reset Form</span>
+                </button>
+
+                <button type="button" onclick="prepareAndPrint()" class="h-8 px-3.5 text-xs font-semibold bg-sky-600 hover:bg-sky-500 text-white border border-sky-500 rounded-lg shadow-xs transition inline-flex items-center justify-center gap-1.5 cursor-pointer" title="Cetak atau simpan laporan ke PDF">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    <span>Cetak / Simpan PDF</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         LEMBAR DOKUMEN A4 UTAMA
+         ========================================================= -->
+    <main class="a4-sheet" id="reportDocument">
+        
+        <!-- 1. KOP SURAT (HEADER) -->
+        <header class="double-border-bottom pb-3 mb-5">
+            <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                <!-- Area Logo Perusahaan (SPT Group via Google Drive + Fallback Multi-Tahap + Upload Instan) -->
+                <div class="relative group flex-shrink-0 flex flex-col items-center justify-center">
+                    <div id="logoContainer" class="flex items-center justify-center overflow-hidden bg-white rounded px-1">
+                        <!-- Gambar utama dari Google Drive SPT Group dengan fallback berjenjang -->
+                        <img id="companyLogo" 
+                             src="https://drive.google.com/thumbnail?id=1Jkys8iQ5Ubf2kT0IhgBf812TwWm5NtUK&sz=w1000" 
+                             alt="Logo SPT Group" 
+                             style="max-height: 56px; width: auto; max-width: 185px; object-fit: contain;"
+                             onerror="handleLogoError(this)">
+                        
+                        <!-- Fallback Vektor SVG Identik 3 Emblem SPT Group (Tampil tajam saat offline / hotlink diblokir) -->
+                        <div id="logoFallback" class="hidden flex items-center justify-center" style="height: 56px; max-width: 185px;">
+                            <svg viewBox="0 0 330 100" style="height: 52px; width: auto; max-width: 178px;" xmlns="http://www.w3.org/2000/svg" aria-label="Logo SPT Group">
+                                <!-- Emblem 1: Lingkaran Merah Gelombang -->
+                                <g transform="translate(5, 5)">
+                                    <path d="M58,3 C33,0 8,16 3,42 C1,52 2,61 5,69 C16,64 26,54 34,40 C41,26 49,12 58,3 Z" fill="#e11d24"/>
+                                    <path d="M72,11 C61,15 51,26 43,41 C34,57 22,71 8,78 C12,83 18,87 24,89 C37,82 48,68 56,52 C64,37 72,24 81,19 C78,16 75,13 72,11 Z" fill="#e11d24"/>
+                                    <path d="M85,25 C75,30 67,41 59,56 C51,71 41,84 30,91 C36,93 42,94 49,93 C60,84 69,71 76,56 C82,44 87,34 91,31 C89,29 87,27 85,25 Z" fill="#e11d24"/>
+                                    <path d="M92,38 C83,46 76,58 69,71 C64,81 58,88 53,93 C77,91 95,70 93,45 C93,43 93,40 92,38 Z" fill="#e11d24"/>
+                                </g>
+                                <!-- Emblem 2: Segitiga Merah-Biru dengan Swoosh Oranye -->
+                                <g transform="translate(105, 5)">
+                                    <polygon points="62,4 28,45 45,45 62,24 79,45 96,45" fill="#d91b24"/>
+                                    <polygon points="84,52 75,52 84,63 40,63 26,75 108,75" fill="#0038ff"/>
+                                    <path d="M135,44 C95,38 35,40 12,62 C-4,77 10,93 48,96 C22,87 16,74 31,62 C50,48 96,43 135,44 Z" fill="#f03e00"/>
+                                </g>
+                                <!-- Emblem 3: Bola Garis-Garis Hijau, Biru Muda, Kuning, Merah, Hitam -->
+                                <g transform="translate(238, 5)">
+                                    <path d="M44,3 C18,5 0,26 1,52 C2,76 22,94 47,94 C31,84 22,68 23,51 C24,35 35,23 43,12 C45,9 45,6 44,3 Z" fill="#32b236"/>
+                                    <path d="M53,3 C56,16 53,30 45,44 C37,59 35,76 49,94 C43,78 46,62 54,48 C62,33 63,16 53,3 Z" fill="#1bc5e8"/>
+                                    <path d="M62,7 C66,20 63,34 56,48 C48,62 46,78 56,93 C53,79 56,64 64,50 C71,36 72,19 62,7 Z" fill="#f7dc16"/>
+                                    <path d="M71,14 C75,26 72,39 65,52 C59,64 57,78 64,90 C63,78 66,65 72,53 C79,40 79,25 71,14 Z" fill="#e61c24"/>
+                                    <path d="M79,24 C83,35 80,46 74,57 C69,67 67,78 72,87 C73,77 76,66 81,56 C87,45 86,33 79,24 Z" fill="#18181b"/>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+
+                    <!-- Kontrol Logo (Hanya di layar, compact & sejajar terpusat) -->
+                    <div class="no-print mt-1.5 flex flex-wrap items-center justify-center gap-1.5">
+                        <label for="logoUploadInput" style="font-size: 11px; padding: 3px 8px; border-radius: 4px;" class="bg-slate-800 hover:bg-slate-700 text-white font-medium shadow-2xs cursor-pointer inline-flex items-center gap-1 transition" title="Unggah file logo kustom">
+                            <svg class="w-2.5 h-2.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                            <span>Ganti Logo</span>
+                        </label>
+                        <button type="button" id="resetLogoBtn" onclick="resetToDefaultLogo()" style="font-size: 11px; padding: 3px 8px; border-radius: 4px;" class="hidden bg-amber-600 hover:bg-amber-700 text-white font-medium shadow-2xs cursor-pointer inline-flex items-center gap-1 transition" title="Kembalikan ke Logo SPT Group Google Drive">
+                            <span>Logo SPT</span>
+                        </button>
+                    </div>
+                    <input type="file" id="logoUploadInput" class="hidden" accept="image/*" onchange="changeCompanyLogo(event)">
+                </div>
+
+                <!-- Identitas Perusahaan (Dropdown) & Judul Laporan -->
+                <div class="text-center flex-1 px-1">
+                    <div class="relative inline-block w-full max-w-md">
+                        <select id="companySelect" 
+                                onchange="handleCompanyChange(); autoSaveDraft();" 
+                                aria-label="Pilih Perusahaan"
+                                title="Klik untuk memilih nama perusahaan"
+                                class="company-select w-full text-sku-navy uppercase leading-snug bg-slate-50/90 hover:bg-amber-50/70 border border-slate-300 hover:border-amber-400 rounded-md py-1 transition cursor-pointer focus:outline-none focus:ring-2 focus:ring-sku-navy/20 focus:border-sku-navy">
+                            <option value="PT. SANDAI PERSADA TAMBANG">PT. SANDAI PERSADA TAMBANG</option>
+                            <option value="PT. SANDAI KEMAKMURAN UTAMA" selected>PT. SANDAI KEMAKMURAN UTAMA</option>
+                            <option value="PT. LABAI PERSADA TAMBANG">PT. LABAI PERSADA TAMBANG</option>
+                        </select>
+                    </div>
+                    <div class="mt-1">
+                        <input type="text" id="siteName" oninput="autoSaveDraft()" value="KECAMATAN SIMPANG HULU" class="w-full max-w-xs text-center text-xs font-bold text-slate-700 tracking-widest uppercase bg-slate-100/80 hover:bg-slate-100 print:bg-transparent border border-transparent hover:border-slate-300 rounded px-2 py-0.5 focus:outline-none focus:border-sku-navy">
+                    </div>
+                    <h1 class="text-sm sm:text-base font-extrabold text-slate-900 mt-1.5 tracking-tight uppercase border-t border-slate-200 pt-1">
+                        LAPORAN HARIAN DIVISI MINE PLAN
+                    </h1>
+                </div>
+
+                <!-- Kode Dokumen Formal di Kanan (Menyeimbangkan tata letak kop) -->
+                <div class="hidden sm:block text-right text-[10px] text-slate-500 border border-slate-300 rounded px-2.5 py-1.5 bg-slate-50/70 print:bg-transparent flex-shrink-0">
+                    <div id="docCodeText" class="font-bold text-slate-700">FORM-SKU-MP-01</div>
+                    <div>Revisi: 00</div>
+                    <div>Halaman: 1 dari 1</div>
+                </div>
+            </div>
+        </header>
+
+        <!-- 2. INFORMASI UMUM (GRID 2 KOLOM RAPI) -->
+        <section class="mb-5 bg-slate-50/80 print:bg-transparent border border-slate-300 rounded-lg p-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-xs">
+                
+                <!-- Kolom Kiri: Tanggal & Shift -->
+                <div class="space-y-2">
+                    <div class="grid grid-cols-12 items-center gap-2">
+                        <label for="tanggal" class="col-span-4 font-semibold text-slate-700">Hari / Tanggal</label>
+                        <div class="col-span-8 flex items-center gap-1.5">
+                            <span class="font-bold text-slate-700">:</span>
+                            <!-- Input Date di Layar -->
+                            <div class="screen-date-input w-full flex items-center gap-1.5">
+                                <input type="date" id="tanggal" onchange="updateDayLabel(); autoSaveDraft();" class="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-medium text-slate-900 focus:outline-none focus:border-sku-navy">
+                                <span id="hariLabel" class="text-[11px] font-semibold text-slate-600 whitespace-nowrap bg-slate-200/70 px-1.5 py-0.5 rounded"></span>
+                            </div>
+                            <!-- Tampilan Tanggal Format Indonesia Rapi Saat Cetak -->
+                            <span id="printDateFormatted" class="print-date-text hidden text-xs font-semibold text-black"></span>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-12 items-center gap-2">
+                        <label for="shiftSelect" class="col-span-4 font-semibold text-slate-700">Shift Kerja</label>
+                        <div class="col-span-8 flex items-center gap-1.5">
+                            <span class="font-bold text-slate-700">:</span>
+                            <div class="w-full relative">
+                                <select id="shiftSelect" onchange="handleCustomSelect('shiftSelect', 'shiftCustom'); autoSaveDraft();" class="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-medium text-slate-900 focus:outline-none focus:border-sku-navy">
+                                    <option value="Shift 1 (Siang)">Shift 1 (Siang)</option>
+                                    <option value="Shift 2 (Malam)">Shift 2 (Malam)</option>
+                                    <option value="Non-Shift / Day Shift">Non-Shift / Day Shift</option>
+                                    <option value="CUSTOM">Lainnya (Ketik Manual)...</option>
+                                </select>
+                                <input type="text" id="shiftCustom" oninput="autoSaveDraft()" placeholder="Ketik shift..." class="hidden mt-1 w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-medium text-slate-900 focus:outline-none focus:border-sku-navy">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kolom Kanan: Cuaca & Pembuat Laporan -->
+                <div class="space-y-2">
+                    <div class="grid grid-cols-12 items-center gap-2">
+                        <label for="cuacaSelect" class="col-span-4 font-semibold text-slate-700">Kondisi Cuaca</label>
+                        <div class="col-span-8 flex items-center gap-1.5">
+                            <span class="font-bold text-slate-700">:</span>
+                            <div class="w-full relative">
+                                <select id="cuacaSelect" onchange="handleCustomSelect('cuacaSelect', 'cuacaCustom'); autoSaveDraft();" class="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-medium text-slate-900 focus:outline-none focus:border-sku-navy">
+                                    <option value="Cerah">Cerah</option>
+                                    <option value="Berawan">Berawan</option>
+                                    <option value="Hujan Ringan">Hujan Ringan</option>
+                                    <option value="Hujan Lebat">Hujan Lebat</option>
+                                    <option value="Pagi Hujan / Siang Cerah">Pagi Hujan / Siang Cerah</option>
+                                    <option value="CUSTOM">Lainnya (Ketik Manual)...</option>
+                                </select>
+                                <input type="text" id="cuacaCustom" oninput="autoSaveDraft()" placeholder="Ketik kondisi cuaca..." class="hidden mt-1 w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-medium text-slate-900 focus:outline-none focus:border-sku-navy">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-12 items-center gap-2">
+                        <label for="pembuat" class="col-span-4 font-semibold text-slate-700">Pembuat Laporan</label>
+                        <div class="col-span-8 flex items-center gap-1.5">
+                            <span class="font-bold text-slate-700">:</span>
+                            <input type="text" id="pembuat" oninput="syncSignatureName(); autoSaveDraft();" placeholder="Nama lengkap Engineer / Surveyor" class="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs font-medium text-slate-900 focus:outline-none focus:border-sku-navy">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- 3. BAGIAN 1: AKTIVITAS HARIAN MINE PLAN -->
+        <section class="mb-5">
+            <div class="mb-2">
+                <h3 class="text-xs sm:text-sm font-bold text-sku-navy uppercase tracking-wide flex items-center gap-2">
+                    <span class="w-5 h-5 rounded bg-sku-navy text-white text-[11px] flex items-center justify-center font-bold">1</span>
+                    Aktivitas Harian Mine Plan
+                </h3>
+            </div>
+
+            <div class="overflow-x-auto">
+                <table class="doc-table text-xs" id="tabelAktivitas">
+                    <thead>
+                        <tr>
+                            <th class="py-2 px-1.5 text-center w-[5%]">No</th>
+                            <th class="py-2 px-2 text-left w-[20%]">Kategori</th>
+                            <th class="py-2 px-2 text-left w-[40%]">Deskripsi Pekerjaan</th>
+                            <th class="py-2 px-2 text-left w-[35%]">Keterangan / Status / Progres</th>
+                            <th class="no-print py-2 px-1.5 text-center w-9">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="aktivitasBody">
+                        <!-- Baris akan di-render oleh JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Bar Kontrol Tabel Aktivitas di Bawah Tabel -->
+            <div class="no-print flex items-center justify-start mt-2">
+                <button type="button" onclick="tambahBaris()" class="h-8 px-3 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-md shadow-xs transition inline-flex items-center justify-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <span>+ Tambah Baris Aktivitas</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 4. BAGIAN 2: KENDALA OPERASIONAL & CATATAN KHUSUS -->
+        <section class="mb-5 notes-section">
+            <h3 class="text-xs sm:text-sm font-bold text-sku-navy uppercase tracking-wide flex items-center gap-2 mb-2">
+                <span class="w-5 h-5 rounded bg-sku-navy text-white text-[11px] flex items-center justify-center font-bold">2</span>
+                Kendala Operasional & Catatan Khusus
+            </h3>
+            <div class="border border-slate-400 rounded-md p-2 bg-white">
+                <textarea id="kendalaOperasional" 
+                          rows="3"
+                          oninput="autoResizeTextarea(this); autoSaveDraft();" 
+                          placeholder="Tuliskan kendala lapangan, faktor cuaca, hambatan teknis alat/survey, atau catatan tindak lanjut untuk shift berikutnya..." 
+                          class="auto-expand w-full text-xs text-slate-900 focus:outline-none"></textarea>
+            </div>
+        </section>
+
+        <!-- 5. BAGIAN 3: DOKUMENTASI LAPANGAN -->
+        <section class="mb-6">
+            <div class="mb-2">
+                <h3 class="text-xs sm:text-sm font-bold text-sku-navy uppercase tracking-wide flex items-center gap-2">
+                    <span class="w-5 h-5 rounded bg-sku-navy text-white text-[11px] flex items-center justify-center font-bold">3</span>
+                    Dokumentasi
+                </h3>
+                <p class="no-print text-[11px] text-slate-500 mt-0.5">
+                    Klik area kotak atau seret (drag &amp; drop) foto ke dalam slot. Foto otomatis disesuaikan secara proporsional saat dicetak.
+                </p>
+            </div>
+
+            <!-- Grid Dokumentasi 2 Kolom -->
+            <div id="dokumentasiGrid" class="grid grid-cols-1 sm:grid-cols-2 print:grid-cols-2 gap-3">
+                <!-- Slot Foto akan di-render oleh JavaScript -->
+            </div>
+
+            <!-- Bar Kontrol Dokumentasi Sejajar Lebar Grid -->
+            <div class="no-print flex flex-wrap items-center justify-between gap-2 mt-2.5">
+                <button type="button" onclick="tambahSlotFoto()" class="h-8 px-3 text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white rounded-md shadow-xs transition inline-flex items-center justify-center gap-1.5 cursor-pointer">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <span>+ Tambah 2 Slot Foto</span>
+                </button>
+
+                <button type="button" id="btnHapusBarisFoto" onclick="hapusBarisSlotFoto()" class="hidden h-8 px-3 text-xs font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 rounded-md transition inline-flex items-center justify-center gap-1.5 cursor-pointer" title="Hapus 2 slot foto terakhir">
+                    <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span>- Hapus 2 Slot Terakhir</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- 6. BAGIAN TANDA TANGAN PENGESAHAN -->
+        <section class="signature-section mt-8 pt-2">
+            <div class="grid grid-cols-2 gap-8 text-center text-xs">
+                <!-- Kolom Kiri: Dibuat Oleh -->
+                <div class="flex flex-col items-center">
+                    <p class="text-slate-700 font-medium">Dibuat Oleh,</p>
+                    <div class="h-20 w-48 border-b border-dashed border-slate-400 print:border-solid print:border-slate-800 my-1"></div>
+                    <input type="text" id="ttdPembuat" oninput="autoSaveDraft()" placeholder="( Nama Mine Engineer / Surveyor )" class="w-56 text-center font-bold text-slate-900 bg-slate-50 print:bg-transparent border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:border-sku-navy">
+                    <input type="text" id="jabatanPembuat" oninput="autoSaveDraft()" value="Mine Engineer / Surveyor" class="w-56 text-center text-[11px] font-semibold text-slate-600 mt-0.5 bg-transparent focus:outline-none">
+                </div>
+
+                <!-- Kolom Kanan: Mengetahui -->
+                <div class="flex flex-col items-center">
+                    <p class="text-slate-700 font-medium">Mengetahui,</p>
+                    <div class="h-20 w-48 border-b border-dashed border-slate-400 print:border-solid print:border-slate-800 my-1"></div>
+                    <input type="text" id="ttdPenyetuju" oninput="autoSaveDraft()" placeholder="( Nama Mine Plan Dept. Head )" class="w-60 text-center font-bold text-slate-900 bg-slate-50 print:bg-transparent border border-slate-200 rounded px-2 py-0.5 focus:outline-none focus:border-sku-navy">
+                    <input type="text" id="jabatanPenyetuju" oninput="autoSaveDraft()" value="Mine Plan Department Head" class="w-60 text-center text-[11px] font-semibold text-slate-600 mt-0.5 bg-transparent focus:outline-none">
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. BAR TOMBOL CETAK BAWAH (SEJAJAR DI TENGAH KERTAS A4, TERSEMBUNYI SAAT PRINT) -->
+        <div class="no-print mt-7 pt-4 border-t border-slate-200 flex flex-wrap items-center justify-center gap-2.5">
+            <button type="button" onclick="openGDriveModal()" class="w-full max-w-[220px] h-9 px-4 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg shadow-xs transition inline-flex items-center justify-center gap-1.5 cursor-pointer">
+                <svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm1.35 0l6.56 11.5h6.86L15.92 3.5H9.06zm5.79 13L8.3 16.5l-3.43 6h13.71l3.43-6h-7.16z"/></svg>
+                <span>Simpan ke Google Drive</span>
+            </button>
+
+            <button type="button" onclick="prepareAndPrint()" class="w-full max-w-[220px] h-9 px-4 text-xs font-semibold bg-sky-600 hover:bg-sky-700 text-white rounded-lg shadow-xs transition inline-flex items-center justify-center gap-1.5 cursor-pointer">
+                <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                <span>Cetak / Simpan PDF</span>
+            </button>
+        </div>
+
+    </main>
+
+    <!-- =========================================================
+         MODAL SIMPAN KE GOOGLE DRIVE (FOLDER: LAPORAN HARIAN MINE PLAN)
+         ========================================================= -->
+    <div id="gdriveModal" class="no-print fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="modal-animate bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+            <!-- Header Modal -->
+            <div class="flex items-start justify-between gap-3 border-b border-slate-100 pb-4 mb-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-11 h-11 rounded-xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 flex-shrink-0">
+                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentColor"><path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm1.35 0l6.56 11.5h6.86L15.92 3.5H9.06zm5.79 13L8.3 16.5l-3.43 6h13.71l3.43-6h-7.16z"/></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-900">Simpan ke Google Drive</h3>
+                        <p class="text-xs text-slate-500">Arsip Digital Divisi Mine Plan — SPT Group</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeGDriveModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg transition cursor-pointer" title="Tutup">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+
+            <!-- Info Folder Tujuan & Nama File Otomatis -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-4 space-y-2.5 text-xs">
+                <div class="flex items-center justify-between gap-2">
+                    <div>
+                        <span class="text-[11px] font-medium text-slate-500 block">Folder Tujuan Google Drive:</span>
+                        <span class="font-bold text-slate-800 flex items-center gap-1.5 mt-0.5">
+                            <svg class="w-4 h-4 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M2 6a2 2 0 012-2h5l2 2h5a2 2 0 012 2v6a2 2 0 01-2 2H4a2 2 0 01-2-2V6z"/></svg>
+                            Laporan Harian Mine Plan
+                        </span>
+                    </div>
+                    <a href="https://drive.google.com/drive/folders/1nKKsrwvMKia2AbYCRqhl9-JcIp620rtq" target="_blank" rel="noopener noreferrer" class="px-2.5 py-1.5 text-[11px] font-semibold bg-white hover:bg-slate-100 text-sku-navy border border-slate-300 rounded-lg shadow-2xs transition flex items-center gap-1">
+                        Buka Folder Drive
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                    </a>
+                </div>
+
+                <div class="border-t border-slate-200 pt-2">
+                    <span class="text-[11px] font-medium text-slate-500 block">Nama File Arsip Otomatis:</span>
+                    <code id="gdriveArchiveFilename" class="block mt-1 px-2 py-1 bg-white border border-slate-200 rounded text-[11px] font-semibold text-emerald-700 break-all">
+                        Laporan_MinePlan_SKU_2026-11-17.html
+                    </code>
+                </div>
+            </div>
+
+            <!-- Mode 1: Simpan Instan Tanpa Konfigurasi -->
+            <div class="mb-4">
+                <button type="button" onclick="saveInstantAndOpenDrive()" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Unduh Arsip Laporan &amp; Buka Folder Google Drive
+                </button>
+                <p class="text-[11px] text-slate-500 mt-1.5 text-center leading-relaxed">
+                    Mengunduh file laporan mandiri (termasuk foto &amp; kop surat) sekaligus membuka folder <strong>Laporan Harian Mine Plan</strong> agar Anda dapat langsung melepaskan (drag &amp; drop) file ke Drive.
+                </p>
+            </div>
+
+            <!-- Mode 2: Unggah Langsung via Google Drive REST API (Opsional) -->
+            <details class="group border border-slate-200 rounded-xl bg-slate-50/60 overflow-hidden">
+                <summary class="px-3.5 py-2.5 text-xs font-semibold text-slate-700 cursor-pointer hover:bg-slate-100/80 flex items-center justify-between select-none">
+                    <span class="flex items-center gap-1.5">
+                        <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                        Unggah Otomatis Langsung via Google Drive API (Opsional)
+                    </span>
+                    <span class="text-[10px] text-slate-400 group-open:rotate-180 transition-transform">&#9660;</span>
+                </summary>
+                <div class="p-3.5 border-t border-slate-200 bg-white space-y-2.5 text-xs">
+                    <div>
+                        <label for="gdriveAccessToken" class="block text-[11px] font-semibold text-slate-700 mb-1">Google OAuth 2.0 Access Token:</label>
+                        <input type="password" id="gdriveAccessToken" placeholder="ya29.a0AfH6SM..." class="w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-sky-600">
+                    </div>
+                    <div id="gdriveApiStatus" class="hidden text-[11px] px-2.5 py-2 rounded-lg font-medium"></div>
+                    <button type="button" id="btnUploadDriveApi" onclick="uploadDirectlyToGoogleDrive()" class="w-full py-2 px-3 bg-sky-600 hover:bg-sky-700 text-white font-semibold text-xs rounded-lg shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                        Upload Langsung ke Folder "Laporan Harian Mine Plan"
+                    </button>
+                </div>
+            </details>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         CUSTOM MODAL KONFIRMASI RESET (PENGGANTI CONFIRM() NATIVE)
+         ========================================================= -->
+    <div id="resetModal" class="no-print fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="modal-animate bg-white rounded-xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+            <div class="flex items-center gap-3 text-rose-600 mb-3">
+                <div class="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center flex-shrink-0">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <h3 class="text-base font-bold text-slate-900">Reset Formulir Laporan?</h3>
+            </div>
+            <p class="text-xs text-slate-600 leading-relaxed mb-5">
+                Semua data aktivitas, catatan kendala, dan foto dokumentasi yang sedang diisi akan dihapus dan dikembalikan ke formulir kosong awal. Tindakan ini tidak dapat dibatalkan.
+            </p>
+            <div class="flex justify-end gap-2">
+                <button type="button" onclick="closeResetModal()" class="px-4 py-2 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition cursor-pointer">
+                    Batal
+                </button>
+                <button type="button" onclick="confirmResetForm()" class="px-4 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg shadow transition cursor-pointer">
+                    Ya, Kosongkan Form
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- =========================================================
+         TOAST NOTIFIKASI RINGKAS
+         ========================================================= -->
+    <div id="toastBanner" class="no-print fixed bottom-5 right-5 z-50 hidden bg-slate-900 text-white text-xs font-medium px-4 py-2.5 rounded-lg shadow-xl border border-slate-700 flex items-center gap-2">
+        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        <span id="toastMessage">Draft berhasil disimpan!</span>
+    </div>
+
+    <!-- =========================================================
+         JAVASCRIPT LOGIKA APLIKASI
+         ========================================================= -->
+    <script>
+        const STORAGE_KEY = 'spt_mineplan_daily_report_v2';
+        const GDRIVE_FOLDER_ID = '1nKKsrwvMKia2AbYCRqhl9-JcIp620rtq';
+        const GDRIVE_FOLDER_URL = `https://drive.google.com/drive/folders/${GDRIVE_FOLDER_ID}`;
+        const GDRIVE_LOGO_PRIMARY = 'https://drive.google.com/thumbnail?id=1Jkys8iQ5Ubf2kT0IhgBf812TwWm5NtUK&sz=w1000';
+        const GDRIVE_LOGO_SECONDARY = 'https://lh3.googleusercontent.com/d/1Jkys8iQ5Ubf2kT0IhgBf812TwWm5NtUK';
+        let saveTimeout = null;
+        let googleTokenClient = null;
+
+        // Data State Aplikasi
+        let reportState = {
+            company: 'PT. SANDAI KEMAKMURAN UTAMA',
+            siteName: 'KECAMATAN SIMPANG HULU',
+            logoDataUrl: null,
+            tanggal: '',
+            shiftSelect: 'Shift 1 (Siang)',
+            shiftCustom: '',
+            cuacaSelect: 'Cerah',
+            cuacaCustom: '',
+            pembuat: '',
+            kendala: '',
+            ttdPembuat: '',
+            jabatanPembuat: 'Mine Engineer / Surveyor',
+            ttdPenyetuju: '',
+            jabatanPenyetuju: 'Mine Plan Department Head',
+            aktivitas: [
+                { id: 1, kategori: 'Desain', deskripsi: '', progres: '' },
+                { id: 2, kategori: 'Survey', deskripsi: '', progres: '' }
+            ],
+            dokumentasi: [
+                { id: 1, image: null, caption: '' },
+                { id: 2, image: null, caption: '' }
+            ]
+        };
+
+        // Inisialisasi saat halaman dimuat
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    reportState = { ...reportState, ...parsed };
+                } catch (e) {
+                    console.error('Gagal membaca draft tersimpan:', e);
+                }
+            } else {
+                // Set tanggal hari ini secara default
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                reportState.tanggal = `${yyyy}-${mm}-${dd}`;
+            }
+
+            applyStateToUI();
+        });
+
+        // Update kode dokumen & penyesuaian saat nama perusahaan diganti
+        function handleCompanyChange() {
+            const company = document.getElementById('companySelect').value;
+            reportState.company = company;
+            updateDocCodeBadge(company);
+        }
+
+        function updateDocCodeBadge(company) {
+            const badge = document.getElementById('docCodeText');
+            if (!badge) return;
+            if (company === 'PT. SANDAI PERSADA TAMBANG') {
+                badge.textContent = 'FORM-SPT-MP-01';
+            } else if (company === 'PT. LABAI PERSADA TAMBANG') {
+                badge.textContent = 'FORM-LPT-MP-01';
+            } else {
+                badge.textContent = 'FORM-SKU-MP-01';
+            }
+        }
+
+        // Handle Fallback Berjenjang untuk Logo SPT Group Google Drive
+        function handleLogoError(imgEl) {
+            const img = imgEl || document.getElementById('companyLogo');
+            const fallback = document.getElementById('logoFallback');
+            const attempt = parseInt(img.dataset.fallbackAttempt || '0', 10);
+
+            if (attempt === 0) {
+                // Tahap 1 gagal -> coba endpoint lh3.googleusercontent.com
+                img.dataset.fallbackAttempt = '1';
+                img.src = GDRIVE_LOGO_SECONDARY;
+            } else {
+                // Tahap 2 gagal / offline -> tampilkan SVG vektor inline identik SPT Group
+                img.classList.add('hidden');
+                fallback.classList.remove('hidden');
+            }
+        }
+
+        // Ganti Logo Perusahaan Secara Instan (Manual Upload)
+        function changeCompanyLogo(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                reportState.logoDataUrl = e.target.result;
+                const img = document.getElementById('companyLogo');
+                const fallback = document.getElementById('logoFallback');
+                const resetBtn = document.getElementById('resetLogoBtn');
+                img.dataset.fallbackAttempt = '2';
+                img.src = e.target.result;
+                img.classList.remove('hidden');
+                fallback.classList.add('hidden');
+                if (resetBtn) resetBtn.classList.remove('hidden');
+                autoSaveDraft();
+                showToast('Logo kustom berhasil diterapkan');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Kembalikan Logo ke Tautan Google Drive SPT Group
+        function resetToDefaultLogo() {
+            reportState.logoDataUrl = null;
+            const img = document.getElementById('companyLogo');
+            const fallback = document.getElementById('logoFallback');
+            const resetBtn = document.getElementById('resetLogoBtn');
+            img.dataset.fallbackAttempt = '0';
+            img.src = GDRIVE_LOGO_PRIMARY;
+            img.classList.remove('hidden');
+            fallback.classList.add('hidden');
+            if (resetBtn) resetBtn.classList.add('hidden');
+            autoSaveDraft();
+            showToast('Logo dikembalikan ke SPT Group (Google Drive)');
+        }
+
+        // Toggle Input Manual untuk Dropdown Shift / Cuaca
+        function handleCustomSelect(selectId, customInputId) {
+            const selectEl = document.getElementById(selectId);
+            const customEl = document.getElementById(customInputId);
+            if (selectEl.value === 'CUSTOM') {
+                customEl.classList.remove('hidden');
+                customEl.focus();
+            } else {
+                customEl.classList.add('hidden');
+            }
+        }
+
+        // Menampilkan nama hari & format tanggal Indonesia lengkap untuk tampilan layar dan cetak
+        function updateDayLabel() {
+            const dateInput = document.getElementById('tanggal').value;
+            const label = document.getElementById('hariLabel');
+            const printLabel = document.getElementById('printDateFormatted');
+
+            if (!dateInput) {
+                label.textContent = '';
+                label.classList.add('hidden');
+                if (printLabel) printLabel.textContent = '-';
+                return;
+            }
+
+            const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            const months = [
+                'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+            ];
+            const parts = dateInput.split('-');
+            if (parts.length === 3) {
+                const year = parseInt(parts[0], 10);
+                const monthIdx = parseInt(parts[1], 10) - 1;
+                const dayNum = parseInt(parts[2], 10);
+                const d = new Date(year, monthIdx, dayNum);
+                const dayName = days[d.getDay()];
+
+                label.textContent = dayName;
+                label.classList.remove('hidden');
+
+                if (printLabel) {
+                    printLabel.textContent = `${dayName}, ${dayNum} ${months[monthIdx]} ${year}`;
+                }
+            }
+        }
+
+        // Sinkronisasi otomatis nama Pembuat Laporan ke kolom Tanda Tangan
+        function syncSignatureName() {
+            const pembuat = document.getElementById('pembuat').value;
+            const ttdPembuat = document.getElementById('ttdPembuat');
+            if (!ttdPembuat.dataset.manuallyEdited) {
+                ttdPembuat.value = pembuat ? `( ${pembuat} )` : '';
+            }
+        }
+
+        document.getElementById('ttdPembuat').addEventListener('input', function() {
+            this.dataset.manuallyEdited = this.value.trim() !== '' ? 'true' : '';
+        });
+
+        // Auto-expand textarea agar semua baris terlihat utuh saat di-print
+        function autoResizeTextarea(el) {
+            el.style.height = 'auto';
+            el.style.height = (el.scrollHeight) + 'px';
+        }
+
+        function resizeAllTextareas() {
+            document.querySelectorAll('textarea.auto-expand').forEach(autoResizeTextarea);
+        }
+
+        // Render Tabel Aktivitas
+        function renderAktivitas() {
+            const tbody = document.getElementById('aktivitasBody');
+            tbody.innerHTML = '';
+
+            const kategoriOptions = [
+                'Desain',
+                'Survey',
+                'Volume',
+                'Peta / GIS',
+                'Lainnya'
+            ];
+
+            reportState.aktivitas.forEach((item, index) => {
+                // Normalisasi kategori lama jika ada di draft tersimpan
+                let selectedKategori = item.kategori;
+                if (selectedKategori === 'Desain Tambang') selectedKategori = 'Desain';
+                if (selectedKategori === 'Survey & Pengukuran') selectedKategori = 'Survey';
+                if (selectedKategori === 'Perhitungan Volume') selectedKategori = 'Volume';
+
+                const tr = document.createElement('tr');
+                tr.className = 'align-top hover:bg-slate-50/70 transition';
+
+                const optionsHtml = kategoriOptions.map(opt => 
+                    `<option value="${opt}" ${selectedKategori === opt ? 'selected' : ''}>${opt}</option>`
+                ).join('');
+
+                tr.innerHTML = `
+                    <td class="py-1.5 px-1.5 text-center font-semibold text-slate-700">${index + 1}</td>
+                    <td class="py-1.5 px-1.5">
+                        <select onchange="updateAktivitas(${index}, 'kategori', this.value)" class="w-full bg-white border border-slate-200 rounded px-1.5 py-1 text-xs font-medium text-slate-800 focus:outline-none focus:border-sku-navy">
+                            ${optionsHtml}
+                        </select>
+                    </td>
+                    <td class="py-1.5 px-1.5">
+                        <textarea rows="1" 
+                                  oninput="autoResizeTextarea(this); updateAktivitas(${index}, 'deskripsi', this.value)" 
+                                  placeholder="Uraian pekerjaan desain, stake out, topo, atau pit..." 
+                                  class="auto-expand w-full bg-transparent text-xs text-slate-900 focus:outline-none">${escapeHtml(item.deskripsi)}</textarea>
+                    </td>
+                    <td class="py-1.5 px-1.5">
+                        <textarea rows="1" 
+                                  oninput="autoResizeTextarea(this); updateAktivitas(${index}, 'progres', this.value)" 
+                                  placeholder="Status selesai / target / volume..." 
+                                  class="auto-expand w-full bg-transparent text-xs text-slate-900 focus:outline-none">${escapeHtml(item.progres)}</textarea>
+                    </td>
+                    <td class="no-print py-1.5 px-1 text-center align-middle">
+                        <button type="button" onclick="hapusBaris(${index})" style="width: 26px; height: 26px;" class="mx-auto inline-flex items-center justify-center text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition cursor-pointer" title="Hapus baris ini">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            setTimeout(resizeAllTextareas, 10);
+        }
+
+        function updateAktivitas(index, field, value) {
+            if (reportState.aktivitas[index]) {
+                reportState.aktivitas[index][field] = value;
+                autoSaveDraft();
+            }
+        }
+
+        function tambahBaris() {
+            reportState.aktivitas.push({
+                id: Date.now(),
+                kategori: 'Desain',
+                deskripsi: '',
+                progres: ''
+            });
+            renderAktivitas();
+            autoSaveDraft();
+        }
+
+        function hapusBaris(index) {
+            if (reportState.aktivitas.length <= 1) {
+                reportState.aktivitas[0] = { id: Date.now(), kategori: 'Desain', deskripsi: '', progres: '' };
+            } else {
+                reportState.aktivitas.splice(index, 1);
+            }
+            renderAktivitas();
+            autoSaveDraft();
+        }
+
+        // Render Grid Dokumentasi Foto
+        function renderDokumentasi() {
+            const grid = document.getElementById('dokumentasiGrid');
+            grid.innerHTML = '';
+
+            // Tampilkan tombol hapus pasangan slot jika jumlah slot lebih dari 2
+            const btnHapusBarisFoto = document.getElementById('btnHapusBarisFoto');
+            if (btnHapusBarisFoto) {
+                if (reportState.dokumentasi.length > 2) {
+                    btnHapusBarisFoto.classList.remove('hidden');
+                } else {
+                    btnHapusBarisFoto.classList.add('hidden');
+                }
+            }
+
+            reportState.dokumentasi.forEach((doc, index) => {
+                const hasImage = Boolean(doc.image);
+                const card = document.createElement('div');
+                card.className = `doc-photo-card border border-slate-400 rounded-md overflow-hidden bg-white flex flex-col ${hasImage ? '' : 'empty-photo-slot'}`;
+
+                card.innerHTML = `
+                    <div class="bg-slate-100 print:bg-slate-200 border-b border-slate-400 px-2.5 py-1 flex items-center justify-between">
+                        <span class="text-[11px] font-bold text-sku-navy uppercase">Dokumentasi ${index + 1}</span>
+                        <span class="no-print text-[10px] text-slate-400">${hasImage ? 'Terunggah' : 'Kosong'}</span>
+                    </div>
+
+                    <!-- Area Gambar / Dropzone -->
+                    <div class="photo-dropzone relative h-48 sm:h-52 bg-slate-50 flex items-center justify-center p-2 cursor-pointer group transition hover:bg-slate-100/80"
+                         onclick="triggerFileInput(${index})"
+                         ondragover="handleDragOver(event, this)"
+                         ondragleave="handleDragLeave(event, this)"
+                         ondrop="handleDropPhoto(event, ${index})">
+                        
+                        <input type="file" id="photoInput_${index}" class="hidden" accept="image/*" onchange="handlePhotoUpload(event, ${index})">
+
+                        ${hasImage ? `
+                            <button type="button" onclick="event.stopPropagation(); hapusFoto(${index})" style="font-size: 11px; padding: 3px 8px; border-radius: 4px;" class="no-print absolute top-2 right-2 z-10 bg-rose-600/95 hover:bg-rose-700 text-white font-semibold shadow-sm transition inline-flex items-center gap-1 cursor-pointer" title="Hapus foto ini">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                <span>Hapus Foto</span>
+                            </button>
+                            <img src="${doc.image}" alt="Dokumentasi ${index + 1}" class="max-h-full max-w-full object-contain rounded shadow-xs">
+                            <div class="no-print absolute inset-0 bg-slate-900/35 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
+                                <span class="bg-white text-slate-900 text-xs font-semibold px-3 py-1 rounded-md shadow">Ganti Foto</span>
+                            </div>
+                        ` : `
+                            <div class="no-print text-center px-4">
+                                <svg class="w-8 h-8 text-slate-400 mx-auto mb-1.5 group-hover:text-sku-navy transition" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                <p class="text-xs font-semibold text-slate-600">Klik untuk pilih foto</p>
+                                <p class="text-[10px] text-slate-400 mt-0.5">atau seret &amp; lepas gambar ke sini</p>
+                            </div>
+                        `}
+                    </div>
+
+                    <!-- Keterangan Gambar -->
+                    <div class="border-t border-slate-300 px-2 py-1.5 bg-white">
+                        <input type="text" 
+                               value="${escapeHtml(doc.caption)}" 
+                               oninput="updateCaptionFoto(${index}, this.value)" 
+                               placeholder="Keterangan gambar ${index + 1} (contoh: Pengukuran topo Pit Utara)..." 
+                               class="w-full text-xs text-slate-800 placeholder-slate-400 focus:outline-none">
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function triggerFileInput(index) {
+            document.getElementById(`photoInput_${index}`).click();
+        }
+
+        function handleDragOver(e, el) {
+            e.preventDefault();
+            el.classList.add('ring-2', 'ring-sky-500', 'bg-sky-50');
+        }
+
+        function handleDragLeave(e, el) {
+            e.preventDefault();
+            el.classList.remove('ring-2', 'ring-sky-500', 'bg-sky-50');
+        }
+
+        function handleDropPhoto(e, index) {
+            e.preventDefault();
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                processAndCompressImage(file, index);
+            }
+        }
+
+        function handlePhotoUpload(e, index) {
+            const file = e.target.files[0];
+            if (file) {
+                processAndCompressImage(file, index);
+            }
+        }
+
+        // Kompresi gambar ringan agar hasil cetak tetap tajam namun tidak membebani LocalStorage
+        function processAndCompressImage(file, index) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 1000;
+                    const MAX_HEIGHT = 800;
+                    let width = img.width;
+                    let height = img.height;
+
+                    if (width > height) {
+                        if (width > MAX_WIDTH) {
+                            height *= MAX_WIDTH / width;
+                            width = MAX_WIDTH;
+                        }
+                    } else {
+                        if (height > MAX_HEIGHT) {
+                            width *= MAX_HEIGHT / height;
+                            height = MAX_HEIGHT;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.82);
+                    reportState.dokumentasi[index].image = compressedDataUrl;
+                    renderDokumentasi();
+                    autoSaveDraft();
+                };
+                img.src = event.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updateCaptionFoto(index, value) {
+            if (reportState.dokumentasi[index]) {
+                reportState.dokumentasi[index].caption = value;
+                autoSaveDraft();
+            }
+        }
+
+        function hapusFoto(index) {
+            reportState.dokumentasi[index].image = null;
+            renderDokumentasi();
+            autoSaveDraft();
+        }
+
+        function tambahSlotFoto() {
+            reportState.dokumentasi.push(
+                { id: Date.now() + 1, image: null, caption: '' },
+                { id: Date.now() + 2, image: null, caption: '' }
+            );
+            renderDokumentasi();
+            autoSaveDraft();
+        }
+
+        function hapusSlotFoto(index) {
+            reportState.dokumentasi.splice(index, 1);
+            renderDokumentasi();
+            autoSaveDraft();
+        }
+
+        function hapusBarisSlotFoto() {
+            if (reportState.dokumentasi.length > 2) {
+                reportState.dokumentasi.splice(-2, 2);
+                renderDokumentasi();
+                autoSaveDraft();
+                showToast('2 slot foto terakhir dihapus');
+            }
+        }
+
+        // Sinkronisasi State <-> UI
+        function applyStateToUI() {
+            const companySelect = document.getElementById('companySelect');
+            if (companySelect && reportState.company) {
+                companySelect.value = reportState.company;
+            }
+            updateDocCodeBadge(reportState.company);
+
+            const siteInput = document.getElementById('siteName');
+            if (siteInput && reportState.siteName) {
+                siteInput.value = reportState.siteName;
+            }
+
+            const img = document.getElementById('companyLogo');
+            const fallback = document.getElementById('logoFallback');
+            const resetBtn = document.getElementById('resetLogoBtn');
+
+            if (reportState.logoDataUrl) {
+                img.dataset.fallbackAttempt = '2';
+                img.src = reportState.logoDataUrl;
+                img.classList.remove('hidden');
+                fallback.classList.add('hidden');
+                if (resetBtn) resetBtn.classList.remove('hidden');
+            } else {
+                img.dataset.fallbackAttempt = '0';
+                img.src = GDRIVE_LOGO_PRIMARY;
+                img.classList.remove('hidden');
+                fallback.classList.add('hidden');
+                if (resetBtn) resetBtn.classList.add('hidden');
+            }
+
+            document.getElementById('tanggal').value = reportState.tanggal || '';
+            updateDayLabel();
+
+            document.getElementById('shiftSelect').value = reportState.shiftSelect || 'Shift 1 (Siang)';
+            document.getElementById('shiftCustom').value = reportState.shiftCustom || '';
+            handleCustomSelect('shiftSelect', 'shiftCustom');
+
+            document.getElementById('cuacaSelect').value = reportState.cuacaSelect || 'Cerah';
+            document.getElementById('cuacaCustom').value = reportState.cuacaCustom || '';
+            handleCustomSelect('cuacaSelect', 'cuacaCustom');
+
+            document.getElementById('pembuat').value = reportState.pembuat || '';
+            document.getElementById('kendalaOperasional').value = reportState.kendala || '';
+            document.getElementById('ttdPembuat').value = reportState.ttdPembuat || '';
+            document.getElementById('jabatanPembuat').value = reportState.jabatanPembuat || 'Mine Engineer / Surveyor';
+            document.getElementById('ttdPenyetuju').value = reportState.ttdPenyetuju || '';
+            document.getElementById('jabatanPenyetuju').value = reportState.jabatanPenyetuju || 'Mine Plan Department Head';
+
+            renderAktivitas();
+            renderDokumentasi();
+            resizeAllTextareas();
+        }
+
+        function collectFormValuesToState() {
+            reportState.company = document.getElementById('companySelect').value;
+            reportState.siteName = document.getElementById('siteName').value;
+            reportState.tanggal = document.getElementById('tanggal').value;
+            reportState.shiftSelect = document.getElementById('shiftSelect').value;
+            reportState.shiftCustom = document.getElementById('shiftCustom').value;
+            reportState.cuacaSelect = document.getElementById('cuacaSelect').value;
+            reportState.cuacaCustom = document.getElementById('cuacaCustom').value;
+            reportState.pembuat = document.getElementById('pembuat').value;
+            reportState.kendala = document.getElementById('kendalaOperasional').value;
+            reportState.ttdPembuat = document.getElementById('ttdPembuat').value;
+            reportState.jabatanPembuat = document.getElementById('jabatanPembuat').value;
+            reportState.ttdPenyetuju = document.getElementById('ttdPenyetuju').value;
+            reportState.jabatanPenyetuju = document.getElementById('jabatanPenyetuju').value;
+        }
+
+        // Auto-save ke LocalStorage dengan indikator status
+        function autoSaveDraft() {
+            const dot = document.getElementById('saveStatusDot');
+            const text = document.getElementById('saveStatusText');
+            dot.className = 'w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse';
+            text.textContent = 'Menyimpan perubahan...';
+
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                collectFormValuesToState();
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(reportState));
+                    dot.className = 'w-2 h-2 rounded-full bg-emerald-400 inline-block';
+                    text.textContent = 'Tersimpan Otomatis di browser';
+                } catch (e) {
+                    dot.className = 'w-2 h-2 rounded-full bg-rose-500 inline-block';
+                    text.textContent = 'Kapasitas penyimpanan penuh (kurangi ukuran foto)';
+                }
+            }, 400);
+        }
+
+        function manualSaveDraft() {
+            collectFormValuesToState();
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(reportState));
+                showToast('Draft laporan berhasil disimpan!');
+            } catch (e) {
+                showToast('Gagal menyimpan: ukuran foto terlalu besar.');
+            }
+        }
+
+        // Modal Reset Form
+        function openResetModal() {
+            document.getElementById('resetModal').classList.remove('hidden');
+        }
+
+        function closeResetModal() {
+            document.getElementById('resetModal').classList.add('hidden');
+        }
+
+        function confirmResetForm() {
+            localStorage.removeItem(STORAGE_KEY);
+            const today = new Date();
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0');
+            const dd = String(today.getDate()).padStart(2, '0');
+
+            reportState = {
+                company: 'PT. SANDAI KEMAKMURAN UTAMA',
+                siteName: 'KECAMATAN SIMPANG HULU',
+                logoDataUrl: null,
+                tanggal: `${yyyy}-${mm}-${dd}`,
+                shiftSelect: 'Shift 1 (Siang)',
+                shiftCustom: '',
+                cuacaSelect: 'Cerah',
+                cuacaCustom: '',
+                pembuat: '',
+                kendala: '',
+                ttdPembuat: '',
+                jabatanPembuat: 'Mine Engineer / Surveyor',
+                ttdPenyetuju: '',
+                jabatanPenyetuju: 'Mine Plan Department Head',
+                aktivitas: [
+                    { id: 1, kategori: 'Desain', deskripsi: '', progres: '' },
+                    { id: 2, kategori: 'Survey', deskripsi: '', progres: '' }
+                ],
+                dokumentasi: [
+                    { id: 1, image: null, caption: '' },
+                    { id: 2, image: null, caption: '' }
+                ]
+            };
+
+            document.getElementById('ttdPembuat').dataset.manuallyEdited = '';
+
+            // Reset logo ke tautan Google Drive SPT Group
+            const img = document.getElementById('companyLogo');
+            const fallback = document.getElementById('logoFallback');
+            const resetBtn = document.getElementById('resetLogoBtn');
+            img.dataset.fallbackAttempt = '0';
+            img.src = GDRIVE_LOGO_PRIMARY;
+            img.classList.remove('hidden');
+            fallback.classList.add('hidden');
+            if (resetBtn) resetBtn.classList.add('hidden');
+
+            applyStateToUI();
+            closeResetModal();
+            showToast('Formulir telah dikosongkan');
+        }
+
+        // Persiapan & Cetak PDF
+        function prepareAndPrint() {
+            updateDayLabel();
+            resizeAllTextareas();
+            setTimeout(() => {
+                window.print();
+            }, 100);
+        }
+
+        // =========================================================
+        // FITUR SIMPAN KE GOOGLE DRIVE (FOLDER: LAPORAN HARIAN MINE PLAN)
+        // =========================================================
+        function getArchiveFileName() {
+            collectFormValuesToState();
+            let compCode = 'SKU';
+            if (reportState.company === 'PT. SANDAI PERSADA TAMBANG') compCode = 'SPT';
+            else if (reportState.company === 'PT. LABAI PERSADA TAMBANG') compCode = 'LPT';
+
+            const dateStr = reportState.tanggal || new Date().toISOString().slice(0, 10);
+            return `Laporan_MinePlan_${compCode}_${dateStr}.html`;
+        }
+
+        function openGDriveModal() {
+            const filenameEl = document.getElementById('gdriveArchiveFilename');
+            if (filenameEl) {
+                filenameEl.textContent = getArchiveFileName();
+            }
+            const statusBox = document.getElementById('gdriveApiStatus');
+            if (statusBox) {
+                statusBox.classList.add('hidden');
+            }
+            document.getElementById('gdriveModal').classList.remove('hidden');
+        }
+
+        function closeGDriveModal() {
+            document.getElementById('gdriveModal').classList.add('hidden');
+        }
+
+        // Membuat snapshot HTML mandiri yang mempertahankan seluruh isi form, dropdown, dan foto
+        function buildStandaloneReportHtml() {
+            collectFormValuesToState();
+            updateDayLabel();
+
+            const docClone = document.documentElement.cloneNode(true);
+
+            // Hapus elemen no-print dari salinan arsip agar bersih saat dibuka kembali/dicetak
+            docClone.querySelectorAll('.no-print').forEach(el => el.remove());
+
+            // Sinkronkan nilai input, select, dan textarea ke atribut DOM agar tersimpan permanen di HTML
+            const origInputs = document.querySelectorAll('input');
+            const cloneInputs = docClone.querySelectorAll('input');
+            origInputs.forEach((inp, idx) => {
+                if (!cloneInputs[idx]) return;
+                if (inp.type === 'checkbox' || inp.type === 'radio') {
+                    if (inp.checked) cloneInputs[idx].setAttribute('checked', 'checked');
+                    else cloneInputs[idx].removeAttribute('checked');
+                } else if (inp.type !== 'file') {
+                    cloneInputs[idx].setAttribute('value', inp.value);
+                }
+            });
+
+            const origSelects = document.querySelectorAll('select');
+            const cloneSelects = docClone.querySelectorAll('select');
+            origSelects.forEach((sel, idx) => {
+                if (!cloneSelects[idx]) return;
+                Array.from(cloneSelects[idx].options).forEach(opt => {
+                    if (opt.value === sel.value) opt.setAttribute('selected', 'selected');
+                    else opt.removeAttribute('selected');
+                });
+            });
+
+            const origTextareas = document.querySelectorAll('textarea');
+            const cloneTextareas = docClone.querySelectorAll('textarea');
+            origTextareas.forEach((ta, idx) => {
+                if (!cloneTextareas[idx]) return;
+                cloneTextareas[idx].textContent = ta.value;
+            });
+
+            return '<!DOCTYPE html>\n' + docClone.outerHTML;
+        }
+
+        // Mode 1: Unduh arsip laporan bersih & buka folder Google Drive "Laporan Harian Mine Plan"
+        function saveInstantAndOpenDrive() {
+            const filename = getArchiveFileName();
+            const htmlContent = buildStandaloneReportHtml();
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(url), 1500);
+
+            window.open(GDRIVE_FOLDER_URL, '_blank', 'noopener,noreferrer');
+            closeGDriveModal();
+            showToast('File arsip diunduh & folder Google Drive dibuka!');
+        }
+
+        // Mode 2: Unggah langsung ke folder Google Drive menggunakan REST API multipart/related
+        async function uploadDirectlyToGoogleDrive() {
+            const tokenInput = document.getElementById('gdriveAccessToken');
+            const statusBox = document.getElementById('gdriveApiStatus');
+            const uploadBtn = document.getElementById('btnUploadDriveApi');
+            const accessToken = tokenInput ? tokenInput.value.trim() : '';
+
+            if (!accessToken) {
+                statusBox.className = 'text-[11px] px-2.5 py-2 rounded-lg font-medium bg-amber-50 text-amber-800 border border-amber-200';
+                statusBox.textContent = 'Masukkan Google OAuth 2.0 Access Token terlebih dahulu.';
+                statusBox.classList.remove('hidden');
+                return;
+            }
+
+            const filename = getArchiveFileName();
+            const htmlContent = buildStandaloneReportHtml();
+
+            const metadata = {
+                name: filename,
+                mimeType: 'text/html',
+                parents: [GDRIVE_FOLDER_ID]
+            };
+
+            const boundary = '-------314159265358979323846';
+            const delimiter = `\r\n--${boundary}\r\n`;
+            const closeDelim = `\r\n--${boundary}--`;
+
+            const multipartRequestBody =
+                delimiter +
+                'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+                JSON.stringify(metadata) +
+                delimiter +
+                'Content-Type: text/html; charset=UTF-8\r\n\r\n' +
+                htmlContent +
+                closeDelim;
+
+            uploadBtn.disabled = true;
+            uploadBtn.classList.add('opacity-70');
+            statusBox.className = 'text-[11px] px-2.5 py-2 rounded-lg font-medium bg-sky-50 text-sky-800 border border-sky-200';
+            statusBox.textContent = 'Mengunggah laporan ke folder "Laporan Harian Mine Plan"...';
+            statusBox.classList.remove('hidden');
+
+            try {
+                const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${accessToken}`,
+                        'Content-Type': `multipart/related; boundary="${boundary}"`
+                    },
+                    body: multipartRequestBody
+                });
+
+                if (!response.ok) {
+                    const errData = await response.json().catch(() => ({}));
+                    const errMsg = (errData.error && errData.error.message) ? errData.error.message : `HTTP ${response.status}`;
+                    throw new Error(errMsg);
+                }
+
+                const result = await response.json();
+                statusBox.className = 'text-[11px] px-2.5 py-2 rounded-lg font-medium bg-emerald-50 text-emerald-800 border border-emerald-200';
+                statusBox.innerHTML = `Berhasil disimpan ke folder <strong>Laporan Harian Mine Plan</strong>! (ID: <code>${escapeHtml(result.id || '')}</code>)`;
+                showToast('Laporan berhasil diunggah ke Google Drive!');
+            } catch (err) {
+                statusBox.className = 'text-[11px] px-2.5 py-2 rounded-lg font-medium bg-rose-50 text-rose-800 border border-rose-200';
+                statusBox.textContent = `Gagal mengunggah ke Google Drive: ${err.message}`;
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.classList.remove('opacity-70');
+            }
+        }
+
+        // Toast Helper
+        function showToast(msg) {
+            const toast = document.getElementById('toastBanner');
+            const msgEl = document.getElementById('toastMessage');
+            msgEl.textContent = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 2800);
+        }
+
+        // Escape HTML untuk mencegah XSS pada render dinamis
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
