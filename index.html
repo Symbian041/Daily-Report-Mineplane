@@ -581,7 +581,7 @@
                     </div>
                     <div>
                         <h3 class="text-base font-bold text-slate-900">Simpan PDF ke Google Drive</h3>
-                        <p class="text-xs text-slate-500">Integrasi Permanen Google Apps Script (Tanpa Expired Token)</p>
+                        <p class="text-xs text-slate-500">Terhubung otomatis ke folder Laporan Harian Mine Plan</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeGDriveModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg transition cursor-pointer" title="Tutup">
@@ -603,102 +603,43 @@
                 </button>
             </div>
 
-            <!-- Form Pengaturan URL Web App Google Apps Script -->
-            <div class="space-y-3 mb-4 text-xs">
-                <div>
-                    <div class="flex items-center justify-between mb-1">
-                        <label for="gasWebAppUrl" class="font-bold text-slate-800">URL Web App Google Apps Script <span class="text-rose-600">*</span></label>
-                        <span class="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">Tersimpan Permanen di Browser</span>
-                    </div>
-                    <input type="url"
-                           id="gasWebAppUrl"
-                           value="https://script.google.com/macros/s/AKfycby8SYGxOf-W43EHxm5rRnDCzYfiiaaso8zGVemNRakQHTKsNH3q29AxX5pQwFam_Fq_KQ/exec"
-                           oninput="saveDriveConfig()"
-                           placeholder="https://script.google.com/macros/s/AKfycb.../exec"
-                           class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 font-mono">
-                </div>
-
-                <div>
-                    <label for="gdriveFolderId" class="block font-semibold text-slate-700 mb-1">
-                        Folder ID Google Drive <span class="text-slate-400 font-normal">(Opsional — kosongkan untuk folder "Laporan Harian Mine Plan")</span>
-                    </label>
-                    <input type="text"
-                           id="gdriveFolderId"
-                           oninput="saveDriveConfig()"
-                           placeholder="Contoh: 1A2b3C4d5E6f7G8h9I0j..."
-                           class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-600 font-mono">
-                </div>
-            </div>
-
             <!-- Area Status Upload / Hasil Link Google Drive -->
             <div id="gdriveApiStatus" class="hidden mb-4 text-xs px-3.5 py-3 rounded-xl font-medium"></div>
 
-            <!-- Tombol Aksi Utama Upload ke Google Drive -->
-            <div class="flex flex-col sm:flex-row items-center gap-2 mb-4">
+            <!-- Tombol Aksi Utama Upload Ulang ke Google Drive -->
+            <div class="flex flex-col sm:flex-row items-center gap-2 mb-3">
                 <button type="button" id="btnUploadDriveGas" onclick="executeUploadPdfToAppsScript()" class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
                     <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-                    <span>Kirim &amp; Simpan PDF ke Google Drive Sekarang</span>
+                    <span>Kirim Ulang PDF ke Google Drive</span>
                 </button>
             </div>
 
-            <!-- Panduan & Salin Kode Google Apps Script Siap Pakai -->
+            <!-- Pengaturan Lanjutan (Opsional & Tersembunyi Secara Default) -->
             <details class="group border border-slate-200 rounded-xl bg-slate-50/70 overflow-hidden">
-                <summary class="px-3.5 py-2.5 text-xs font-semibold text-slate-700 cursor-pointer hover:bg-slate-100 flex items-center justify-between select-none">
-                    <span class="flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                        Belum punya URL Web App? Salin Kode Google Apps Script di sini
-                    </span>
+                <summary class="px-3.5 py-2 text-[11px] font-semibold text-slate-600 cursor-pointer hover:bg-slate-100 flex items-center justify-between select-none">
+                    <span>Pengaturan Koneksi &amp; Folder Khusus (Opsional)</span>
                     <span class="text-[10px] text-slate-400 group-open:rotate-180 transition-transform">&#9660;</span>
                 </summary>
-                <div class="p-3.5 border-t border-slate-200 bg-white space-y-2.5 text-xs">
-                    <ol class="list-decimal list-inside text-[11px] text-slate-600 space-y-1 leading-relaxed">
-                        <li>Buka <a href="https://script.google.com" target="_blank" rel="noopener noreferrer" class="text-sky-600 underline font-semibold">script.google.com</a> &rarr; klik <strong>Proyek baru</strong>.</li>
-                        <li>Hapus isi bawaan lalu tempel kode di bawah ini &rarr; klik <strong>Simpan</strong>.</li>
-                        <li>Klik <strong>Terapkan (Deploy) &rarr; Deployment baru</strong> &rarr; pilih jenis <strong>Aplikasi web</strong>.</li>
-                        <li>Atur <em>Jalankan sebagai:</em> <strong>Saya</strong> &amp; <em>Yang memiliki akses:</em> <strong>Siapa saja</strong> &rarr; klik <strong>Terapkan</strong>.</li>
-                        <li>Salin <strong>URL Aplikasi Web (<code>.../exec</code>)</strong> dan tempel pada kolom di atas.</li>
-                    </ol>
-                    <div class="flex items-center justify-between pt-1">
-                        <span class="text-[11px] font-bold text-slate-700">Kode Google Apps Script (<code>Code.gs</code>):</span>
-                        <button type="button" onclick="copyAppsScriptSnippet()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-semibold rounded-md transition inline-flex items-center gap-1 cursor-pointer">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
-                            <span>Salin Script</span>
-                        </button>
+                <div class="p-3.5 border-t border-slate-200 bg-white space-y-3 text-xs">
+                    <div>
+                        <label for="gasWebAppUrl" class="block font-semibold text-slate-700 mb-1">URL Web App Google Apps Script</label>
+                        <input type="url"
+                               id="gasWebAppUrl"
+                               value="https://script.google.com/macros/s/AKfycby8SYGxOf-W43EHxm5rRnDCzYfiiaaso8zGVemNRakQHTKsNH3q29AxX5pQwFam_Fq_KQ/exec"
+                               oninput="saveDriveConfig()"
+                               class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-600 font-mono">
                     </div>
-                    <textarea id="gasCodeSnippetBox" readonly rows="6" class="w-full p-2.5 bg-slate-900 text-emerald-300 font-mono text-[10.5px] rounded-lg border border-slate-700 focus:outline-none">const DEFAULT_FOLDER_ID = '';
-const DEFAULT_FOLDER_NAME = 'Laporan Harian Mine Plan';
 
-function doPost(e) {
-  try {
-    const payload = JSON.parse(e.postData.contents);
-    const filename = payload.filename || ('Laporan_MinePlan_' + new Date().toISOString().slice(0, 10) + '.pdf');
-    const decodedBytes = Utilities.base64Decode(payload.base64Data);
-    const pdfBlob = Utilities.newBlob(decodedBytes, payload.mimeType || 'application/pdf', filename);
-
-    let targetFolder = null;
-    const activeFolderId = (payload.folderId || '').trim() || DEFAULT_FOLDER_ID;
-    if (activeFolderId) {
-      targetFolder = DriveApp.getFolderById(activeFolderId);
-    } else {
-      const folders = DriveApp.getFoldersByName(DEFAULT_FOLDER_NAME);
-      targetFolder = folders.hasNext() ? folders.next() : DriveApp.createFolder(DEFAULT_FOLDER_NAME);
-    }
-
-    const createdFile = targetFolder.createFile(pdfBlob);
-    return ContentService.createTextOutput(JSON.stringify({
-      status: 'success',
-      fileId: createdFile.getId(),
-      fileName: createdFile.getName(),
-      fileUrl: createdFile.getUrl(),
-      folderName: targetFolder.getName()
-    })).setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({
-      status: 'error',
-      message: err.toString()
-    })).setMimeType(ContentService.MimeType.JSON);
-  }
-}</textarea>
+                    <div>
+                        <label for="gdriveFolderId" class="block font-semibold text-slate-700 mb-1">
+                            Folder ID Google Drive <span class="text-slate-400 font-normal">(Kosongkan untuk folder otomatis)</span>
+                        </label>
+                        <input type="text"
+                               id="gdriveFolderId"
+                               oninput="saveDriveConfig()"
+                               placeholder="Contoh: 1A2b3C4d5E6f7G8h9I0j..."
+                               class="w-full px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:border-emerald-600 font-mono">
+                    </div>
                 </div>
             </details>
         </div>
@@ -1376,19 +1317,6 @@ function doPost(e) {
                 localStorage.setItem(DRIVE_CONFIG_KEY, JSON.stringify({ webAppUrl, folderId }));
             } catch (e) {
                 console.warn('Gagal menyimpan konfigurasi Google Drive:', e);
-            }
-        }
-
-        function copyAppsScriptSnippet() {
-            const box = document.getElementById('gasCodeSnippetBox');
-            if (!box) return;
-            box.select();
-            box.setSelectionRange(0, 99999);
-            try {
-                document.execCommand('copy');
-                showToast('Kode Google Apps Script berhasil disalin!');
-            } catch (e) {
-                showToast('Silakan blok teks script lalu tekan Ctrl+C.');
             }
         }
 
