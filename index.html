@@ -612,6 +612,7 @@
                     </div>
                     <input type="url"
                            id="gasWebAppUrl"
+                           value="https://script.google.com/macros/s/AKfycby8SYGxOf-W43EHxm5rRnDCzYfiiaaso8zGVemNRakQHTKsNH3q29AxX5pQwFam_Fq_KQ/exec"
                            oninput="saveDriveConfig()"
                            placeholder="https://script.google.com/macros/s/AKfycb.../exec"
                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-600 font-mono">
@@ -742,6 +743,7 @@ function doPost(e) {
     <script>
         const STORAGE_KEY = 'spt_mineplan_daily_report_v3';
         const DRIVE_CONFIG_KEY = 'spt_mineplan_gas_drive_config_v1';
+        const DEFAULT_GAS_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycby8SYGxOf-W43EHxm5rRnDCzYfiiaaso8zGVemNRakQHTKsNH3q29AxX5pQwFam_Fq_KQ/exec';
         const GDRIVE_LOGO_PRIMARY = 'https://drive.google.com/thumbnail?id=1Jkys8iQ5Ubf2kT0IhgBf812TwWm5NtUK&sz=w1000';
         const GDRIVE_LOGO_SECONDARY = 'https://lh3.googleusercontent.com/d/1Jkys8iQ5Ubf2kT0IhgBf812TwWm5NtUK';
         let saveTimeout = null;
@@ -1349,13 +1351,18 @@ function doPost(e) {
         // FITUR KONVERSI PDF A4 & SIMPAN KE GOOGLE DRIVE (APPS SCRIPT)
         // =========================================================
         function loadDriveConfig() {
+            const urlInput = document.getElementById('gasWebAppUrl');
+            const folderInput = document.getElementById('gdriveFolderId');
+            if (urlInput && !urlInput.value.trim()) {
+                urlInput.value = DEFAULT_GAS_WEB_APP_URL;
+            }
             try {
                 const raw = localStorage.getItem(DRIVE_CONFIG_KEY);
                 if (!raw) return;
                 const cfg = JSON.parse(raw);
-                const urlInput = document.getElementById('gasWebAppUrl');
-                const folderInput = document.getElementById('gdriveFolderId');
-                if (urlInput && cfg.webAppUrl) urlInput.value = cfg.webAppUrl;
+                if (urlInput) {
+                    urlInput.value = (cfg.webAppUrl && cfg.webAppUrl.trim()) ? cfg.webAppUrl.trim() : DEFAULT_GAS_WEB_APP_URL;
+                }
                 if (folderInput && cfg.folderId) folderInput.value = cfg.folderId;
             } catch (e) {
                 console.warn('Gagal membaca konfigurasi Google Drive:', e);
@@ -1364,7 +1371,7 @@ function doPost(e) {
 
         function saveDriveConfig() {
             try {
-                const webAppUrl = (document.getElementById('gasWebAppUrl')?.value || '').trim();
+                const webAppUrl = (document.getElementById('gasWebAppUrl')?.value || '').trim() || DEFAULT_GAS_WEB_APP_URL;
                 const folderId = (document.getElementById('gdriveFolderId')?.value || '').trim();
                 localStorage.setItem(DRIVE_CONFIG_KEY, JSON.stringify({ webAppUrl, folderId }));
             } catch (e) {
@@ -1568,7 +1575,11 @@ function doPost(e) {
             const filenameEl = document.getElementById('gdriveArchiveFilename');
             if (filenameEl) filenameEl.textContent = filename;
 
-            const webAppUrl = (document.getElementById('gasWebAppUrl')?.value || '').trim();
+            const urlInput = document.getElementById('gasWebAppUrl');
+            if (urlInput && !urlInput.value.trim()) {
+                urlInput.value = DEFAULT_GAS_WEB_APP_URL;
+            }
+            const webAppUrl = (urlInput?.value || '').trim() || DEFAULT_GAS_WEB_APP_URL;
             document.getElementById('gdriveModal').classList.remove('hidden');
 
             if (webAppUrl) {
@@ -1621,7 +1632,12 @@ function doPost(e) {
             const webAppUrl = urlInput ? urlInput.value.trim() : '';
             const folderId = folderInput ? folderInput.value.trim() : '';
 
-            if (!webAppUrl || !webAppUrl.startsWith('https://script.google.com/')) {
+            if (urlInput && !urlInput.value.trim()) {
+                urlInput.value = DEFAULT_GAS_WEB_APP_URL;
+            }
+            const finalWebAppUrl = (urlInput ? urlInput.value.trim() : '') || DEFAULT_GAS_WEB_APP_URL;
+
+            if (!finalWebAppUrl || !finalWebAppUrl.startsWith('https://script.google.com/')) {
                 statusBox.className = 'mb-4 text-xs px-3.5 py-3 rounded-xl font-medium bg-amber-50 text-amber-900 border border-amber-200';
                 statusBox.innerHTML = 'Masukkan <strong>URL Web App Google Apps Script</strong> yang valid (diawali <code>https://script.google.com/...</code>).';
                 statusBox.classList.remove('hidden');
@@ -1665,7 +1681,7 @@ function doPost(e) {
                 };
 
                 // Gunakan text/plain;charset=utf-8 agar tidak memicu CORS preflight OPTIONS pada Google Apps Script
-                const response = await fetch(webAppUrl, {
+                const response = await fetch(finalWebAppUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'text/plain;charset=utf-8'
